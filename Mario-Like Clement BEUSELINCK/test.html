@@ -1,0 +1,1341 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+<meta charset="UTF-8" />
+<title>JEU DE FOU</title>
+<script
+src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js">
+</script>
+<style type="text/css"> body { margin: 0; }</style>
+</head>
+<body>
+<script type="text/javascript">
+    var config = {
+    type: Phaser.AUTO,
+    width: 896, height: 448,
+    physics: {
+        default: 'arcade',
+        arcade: {
+        gravity: { y: 300 },
+        debug: false,
+        pixelArt : true,
+    }},
+    scene: {preload: preload, create: create, update: update }
+    };
+    new Phaser.Game(config);
+    
+    function preload(){
+        
+    this.load.image("E", "assets/touche E.png");
+    this.load.image('buisson', "assets/buisson.png");
+    this.load.image("balle", "assets/balle.png");
+    this.load.image("javelot", "assets/javelot.png");
+    this.load.image("Phaser_tuilesdejeu", "assets/Tiled/TileSet1.png");
+    this.load.image("light", "assets/light.png");
+    this.load.tilemapTiledJSON("carte", "assets/Tiled/level_test2.json");
+    this.load.image('sky', 'assets/sky.png');
+    this.load.image("slot", "assets/UI/slot.png");
+    this.load.image("javelotPlatform", "assets/javelotPlatform.png")
+    this.load.image("barreHPVide", "assets/UI/barreHPVide.png");
+    this.load.image("barreHPValeur", "assets/UI/barreHPValeur.png");
+    this.load.image('ground', 'assets/platform.png');
+    this.load.image('bras', 'assets/bras_perso.png');
+    this.load.image('bras1', 'assets/bras_perso1.png');
+    this.load.image("fleche_gauche", "assets/UI/fleche_gauche.png");
+    this.load.image("fleche_droite", "assets/UI/fleche_droite.png");
+    this.load.image("uiJavelot", "assets/UI/uiJavelot.png");
+    this.load.image("torche", "assets/torche.png");
+    this.load.image("viseur", "assets/viseur.png");
+    this.load.image('perso','assets/perso.png');
+    this.load.image('perso1','assets/perso1.png');
+    this.load.image("warning", "assets/warning.png");
+    this.load.image("eye", "assets/oeil.png");
+    this.load.image("hand1", "assets/main1.png");
+    this.load.image("hand2", "assets/main2.png");
+    this.load.image("hand3", "assets/main3.png");
+    this.load.image("background", "assets/Tiled/background.png");
+    this.load.image("lancier", "assets/lancier.png");
+    this.load.image("lance", "assets/lance.png");
+    this.load.image("gameOver", "assets/UI/GameOver.png");
+    this.load.image("key", "assets/cle.png");
+    this.load.image("menu", "assets/UI/menu.png");
+    this.load.spritesheet('save', "assets/UI/save.png", 
+    {frameWidth: 32, frameHeight: 32});
+    }
+
+    var platforms;
+    var keys = 0;
+    var player;
+    var detection;
+    var cursors;
+    var faceL = false;
+    var faceR = true;
+    var sprint = false;
+    var canTP = false;
+    var canShoot = true;
+    var tpX = 0;
+    var tpY = 0;
+    var xE = 0;
+    var yE = 0;
+    var canHide = false;
+    var hidden = false;
+    var eye1Active = false;
+    var playerIsDetected = false;
+    var handAttack = false;
+
+    var enemyCanShoot = true;
+
+    var playerInvincible = false;
+
+    var sauvegardeX = 0;
+    var sauvegardeY = 0;
+
+    var orbSelected = true;
+    var HP = 100;
+
+    var gameOver = false;
+
+    var menuOpen = true;
+
+    
+    function create(){
+
+        const carteDuNiveau = this.add.tilemap("carte");
+
+                const tileset = carteDuNiveau.addTilesetImage(
+                    "TileSet",
+                    "Phaser_tuilesdejeu"
+                );
+
+                const calque_solide = carteDuNiveau.createLayer(
+                    "calque_solide",
+                    tileset
+                );
+
+        calque_solide.setCollisionByProperty({estSolide: true});
+        calque_solide.setDepth(2)
+
+        var torches = this.physics.add.group({
+            collideWorldBounds: true
+        });
+
+        var buissons = this.physics.add.group({
+            collideWorldBounds: true
+        });
+
+        var background = this.add.image(3100,1500, "background");
+
+
+        var torche1 = torches.create(530, 2600, "torche").setSize(6,32);
+        torche1.setScale(0.1);
+        torche1.setSize(320,640);
+        
+        var torche2 = torches.create(280, 2400, "torche").setSize(6,32);
+        torche2.setScale(0.1);
+        torche2.setSize(320,640);
+        
+        var torche3 = torches.create(1125, 2752, "torche").setSize(6,32);
+        torche3.setScale(0.1);
+        torche3.setSize(320,640);
+        
+        var torche4 = torches.create(1536, 2400, "torche").setSize(6,32);
+        torche4.setScale(0.1);
+        torche4.setSize(320,640);
+        
+        var torche5 = torches.create(1510, 2220, "torche").setSize(6,32);
+        torche5.setScale(0.1);
+        torche5.setSize(320,640);
+
+        var torche6 = torches.create(468, 2014, "torche").setSize(6,32);
+        torche6.setScale(0.1);
+        torche6.setSize(320,640);
+
+        var torche7 = torches.create(1004, 1886, "torche").setSize(6,32);
+        torche7.setScale(0.1);
+        torche7.setSize(320,640);
+
+        var torche8 = torches.create(1092, 1662, "torche").setSize(6,32);
+        torche8.setScale(0.1);
+        torche8.setSize(320,640);
+
+        var torche9 = torches.create(1383, 1598, "torche").setSize(6,32);
+        torche9.setScale(0.1);
+        torche9.setSize(320,640);
+
+        var torche10 = torches.create(1537, 1854, "torche").setSize(6,32);
+        torche10.setScale(0.1);
+        torche10.setSize(320,640);
+
+        var torche11 = torches.create(1996, 1758, "torche").setSize(6,32);
+        torche11.setScale(0.1);
+        torche11.setSize(320,640);
+
+        var torche12 = torches.create(1835, 2526, "torche").setSize(6,32);
+        torche12.setScale(0.1);
+        torche12.setSize(320,640);
+
+        var torche13 = torches.create(2243, 2526, "torche").setSize(6,32);
+        torche13.setScale(0.1);
+        torche13.setSize(320,640);
+
+        var torche14 = torches.create(2895, 2462, "torche").setSize(6,32);
+        torche14.setScale(0.1);
+        torche14.setSize(320,640);
+
+        var torche15 = torches.create(3302, 2686, "torche").setSize(6,32);
+        torche15.setScale(0.1);
+        torche15.setSize(320,640);
+
+        var torche16 = torches.create(3300, 2270, "torche").setSize(6,32);
+        torche16.setScale(0.1);
+        torche16.setSize(320,640);
+
+        var torche17 = torches.create(2220, 1662, "torche").setSize(6,32);
+        torche17.setScale(0.1);
+        torche17.setSize(320,640);
+
+        var torche18 = torches.create(827, 1182, "torche").setSize(6,32);
+        torche18.setScale(0.1);
+        torche18.setSize(320,640);
+
+        var torche19 = torches.create(563, 958, "torche").setSize(6,32);
+        torche19.setScale(0.1);
+        torche19.setSize(320,640);
+
+        var torche20 = torches.create(846, 862, "torche").setSize(6,32);
+        torche20.setScale(0.1);
+        torche20.setSize(320,640);
+
+        var torche21 = torches.create(649, 574, "torche").setSize(6,32);
+        torche21.setScale(0.1);
+        torche21.setSize(320,640);
+
+        var torche22 = torches.create(2153, 1214, "torche").setSize(6,32);
+        torche22.setScale(0.1);
+        torche22.setSize(320,640);
+
+        save = this.add.sprite(820, 400, "save");
+        save.setScrollFactor(0);
+        save.setDepth(10)
+
+        var key1 = this.physics.add.sprite(2036, 1758, "key");
+        var key2 = this.physics.add.sprite(360, 382, "key");
+        var key3 = this.physics.add.sprite(1750, 2526, "key");
+
+        this.physics.add.collider(key1, calque_solide);
+        this.physics.add.collider(key2, calque_solide);
+        this.physics.add.collider(key3, calque_solide);
+
+        this.physics.add.overlap(key1,player,collectKey1, null, this);
+        this.physics.add.overlap(key2,player,collectKey2, null, this);
+        this.physics.add.overlap(key3,player,collectKey3, null, this);
+        
+        this.anims.create({
+        key: 'sauvegarde',
+        frames: this.anims.generateFrameNumbers('save', {start:0,end:3}),
+        frameRate: 10,
+        repeat: -1
+        });
+
+        save.anims.play("sauvegarde", true);
+        save.setVisible(false);
+
+
+        //UI
+
+        uiFlecheGauche = this.physics.add.sprite(610, 70, "fleche_gauche").setScale(0.3);
+        uiFlecheGauche.body.setAllowGravity(false);
+        uiFlecheGauche.setScrollFactor(0);
+
+        menu = this.add.image(450, 220, "menu");
+        menu.setScrollFactor(0);
+        menu.setDepth(20)
+        this.input.on("pointerdown", function(){
+            menuOpen = false;
+        })
+
+        uiFlecheDroite = this.physics.add.sprite(760, 70, "fleche_droite").setScale(0.3);
+        uiFlecheDroite.body.setAllowGravity(false);
+        uiFlecheDroite.setScrollFactor(0);
+
+        uiBalle = this.physics.add.sprite(685, 70, "balle").setScale(0.2);
+        uiBalle.body.setAllowGravity(false);
+        uiBalle.setScrollFactor(0);
+
+        uiJavelot = this.physics.add.sprite(685, 70, "uiJavelot").setScale(0.3);
+        uiJavelot.body.setAllowGravity(false);
+        uiJavelot.setScrollFactor(0);
+
+        uiBarreHPVide = this.physics.add.sprite(175, 70, "barreHPVide").setScale(0.5);
+        uiBarreHPVide.body.setAllowGravity(false);
+        uiBarreHPVide.setScrollFactor(0);
+
+        uiBarreHPValeur = this.physics.add.sprite(uiBarreHPVide.x, uiBarreHPVide.y, "barreHPValeur").setScale(0.5);
+        uiBarreHPValeur.body.setAllowGravity(false);
+        uiBarreHPValeur.setScrollFactor(0);
+        
+        uiSlot1 = this.physics.add.sprite(50, 105, "slot").setScale(0.1);
+        uiSlot1.body.setAllowGravity(false);
+        uiSlot1.setScrollFactor(0);
+
+        uiSlot2 = this.physics.add.sprite(90, 105, "slot").setScale(0.1);
+        uiSlot2.body.setAllowGravity(false);
+        uiSlot2.setScrollFactor(0);
+
+        uiSlot3 = this.physics.add.sprite(130, 105, "slot").setScale(0.1);
+        uiSlot3.body.setAllowGravity(false);
+        uiSlot3.setScrollFactor(0);
+
+        uiBalle.setDepth(10)
+        uiJavelot.setDepth(10)
+        uiFlecheDroite.setDepth(10)
+        uiFlecheGauche.setDepth(10)
+        uiSlot1.setDepth(10)
+        uiSlot2.setDepth(10)
+        uiSlot3.setDepth(10)
+        uiBarreHPValeur.setDepth(10)
+        uiBarreHPVide.setDepth(10)
+
+        uiGameOver = this.physics.add.image(458, 224, "gameOver");
+        uiGameOver.body.setAllowGravity(false);
+        uiGameOver.setDepth(10)
+        uiGameOver.setScrollFactor(0);
+        uiGameOver.setVisible(false);
+
+
+
+        //Environment
+
+        torches = this.physics.add.collider(torches, calque_solide);
+
+        var buisson1 = buissons.create(1180, 2200, "buisson").setScale(0.2)
+        buisson1.setSize(640, 225);
+        var buisson2 = buissons.create(55, 2400, "buisson").setScale(0.2);
+        buisson2.setSize(640, 225);
+
+        buissons = this.physics.add.collider(buissons, calque_solide);
+
+
+        balle = this.physics.add.sprite(-100, -100, "balle").setScale(0.04);
+        balle.body.setAllowGravity(true);
+        balle.setSize(10,10)
+
+        javelot = this.physics.add.sprite(-100, -100, "javelot").setScale(0.1);
+        javelot.body.setAllowGravity(true);
+        javelot.setSize(320,100)
+
+        this.physics.add.collider(javelot, calque_solide, hitWallJavelot, null, this);
+
+        javelotPlatform = this.physics.add.sprite(-999, -999, "javelotPlatform").setScale(0.2);
+        javelotPlatform.body.setAllowGravity(false);
+        javelotPlatform.setSize(640, 125)
+        javelotPlatform.setDepth(1)
+
+        toucheE = this.add.image(-100,-100, "E");
+        
+
+        this.physics.add.collider(balle, calque_solide, hitWall, null, this);
+
+        this.physics.add.overlap(balle, torche1, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche2, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche3, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche4, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche5, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche6, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche7, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche8, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche9, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche10, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche11, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche12, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche13, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche14, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche15, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche16, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche17, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche18, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche19, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche20, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche21, allumeTorche, null, this);
+        this.physics.add.overlap(balle, torche22, allumeTorche, null, this);
+
+        player = this.physics.add.sprite(100, 2950, 'perso1');
+        player.setBounce(0);
+        player.setCollideWorldBounds(true);
+        player.setScale(0.085);
+        player.setSize(400,800)
+
+        this.physics.add.overlap(player, buisson1, passeBuisson, null, this);
+        this.physics.add.overlap(player, buisson2, passeBuisson, null, this);
+        this.physics.add.collider(player, javelotPlatform);
+
+        this.physics.add.collider(player, calque_solide);
+
+
+        bras = this.physics.add.sprite(player.x, player.y, "bras1").setImmovable(true);
+        bras.body.setAllowGravity(false);
+        bras.setAngle(0)
+        bras.setScale(0.08)
+        bras.setOrigin(0.3)
+
+        //LE BOSS 1
+        
+        detection1 = this.add.rectangle(1280, 2160, 600, 200);
+        this.physics.add.existing(detection1);
+        detection1.body.setAllowGravity(false);
+        detection1.body.setImmovable(true)
+
+        
+        patrol1A = this.add.rectangle(detection1.x - 270, detection1.y - 40, 32, 32);
+        this.physics.add.existing(patrol1A);
+        patrol1A.body.setAllowGravity(false);
+        patrol1A.body.setImmovable(true);
+
+        patrol1B = this.add.rectangle(detection1.x + 280, detection1.y - 40, 32, 32);
+        this.physics.add.existing(patrol1B);
+        patrol1B.body.setAllowGravity(false);
+        patrol1B.body.setImmovable(true)
+
+        bossEye1 = this.physics.add.sprite(detection1.x, detection1.y - 50, "eye").setImmovable(true);
+        bossEye1.body.setAllowGravity(false);
+        bossEye1.setScale(0.2);
+        bossEye1.setSize(620, 800)
+        bossEye1.setOffset(20,200)
+        bossEye1.setVelocityX(-100);
+        eye1Active = false;
+        this.physics.add.overlap(bossEye1, patrol1A, function() {
+            bossEye1.setVelocityX(50);
+        });
+        this.physics.add.overlap(bossEye1, patrol1B, function() {
+            bossEye1.setVelocityX(-50);
+        });
+
+        this.physics.add.overlap(player, detection1, spawnEye1, null, this);
+
+        this.physics.add.overlap(player, bossEye1, playerDetected, null, this);
+
+        bossEye1Vision = this.add.rectangle(bossEye1.x, bossEye1.y + 70, 120, 200, "0xff0000", 0.2);
+
+        bossHand = this.physics.add.sprite(-999, -999, "hand1").setImmovable(true);
+        bossHand.body.setAllowGravity(false);
+        bossHand.setScale(0.3)
+        bossHand.setDepth(2)
+
+        this.physics.add.overlap(bossHand, player, function() {
+            handAttack = false;
+            setTimeout(() => {
+                bossHand.setVelocityX(0)
+                HP = 0
+                }, 200);
+                bossHand.setTexture("hand3")
+        })
+
+        finJeu = this.add.rectangle(5560, 1300 , 660, 4000);
+        this.physics.add.existing(finJeu);
+        this.physics.add.overlap(player, finJeu, fini, null, this);
+
+        //ENNEMI 1
+
+        lancier1 = this.physics.add.sprite(850, 2730, "lancier");
+        lancier1.setBounce(0);
+        lancier1.setScale(0.12)
+        lancier1.setImmovable(true)
+        lancier1.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier1, calque_solide);
+
+        lance1 = this.physics.add.sprite(-999, -999, "lance");
+        lance1.body.setAllowGravity(false);
+        lance1.setScale(0.2)
+        lance1.setImmovable(true);
+
+        visionLancier1 = this.add.rectangle(lancier1.x - 380, lancier1.y + 15, 660, 64);
+        this.physics.add.existing(visionLancier1);
+        visionLancier1.body.setAllowGravity(false);
+        visionLancier1.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier1, function() {
+                lancier1.destroy()
+                visionLancier1.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                lance1.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier1, function() {
+                lancier1.destroy()
+                visionLancier1.destroy()
+                lance1.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier1);
+        
+        this.physics.add.overlap(player, visionLancier1, tirerLance1, null, this);
+        
+        this.physics.add.overlap(lance1, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance1, calque_solide, function() {
+            lance1.x = -999
+            lance1.y = -999
+        })
+
+        //ENNEMI 2
+
+        lancier2 = this.physics.add.sprite(1600, 2730, "lancier");
+        lancier2.setBounce(0);
+        lancier2.setScale(0.12)
+        lancier2.setImmovable(true)
+        lancier2.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier2, calque_solide);
+
+        lance2 = this.physics.add.sprite(-999, -999, "lance");
+        lance2.body.setAllowGravity(false);
+        lance2.setScale(0.2)
+        lance2.setImmovable(true);
+
+        visionLancier2 = this.add.rectangle(lancier2.x - 220, lancier2.y + 15, 330, 64);
+        this.physics.add.existing(visionLancier2);
+        visionLancier2.body.setAllowGravity(false);
+        visionLancier2.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier2, function() {
+                lancier2.destroy()
+                visionLancier2.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                lance2.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier2, function() {
+                lancier2.destroy()
+                visionLancier2.destroy()
+                lance2.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier2);
+        
+        this.physics.add.overlap(player, visionLancier2, tirerLance2, null, this);
+        
+        this.physics.add.overlap(lance2, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance2, calque_solide, function() {
+            lance2.x = -999
+            lance2.y = -999
+        })
+
+
+        //ENNEMI 3
+
+        lancier3 = this.physics.add.sprite(911, 2526, "lancier");
+        lancier3.setBounce(0);
+        lancier3.setScale(0.12)
+        lancier3.setImmovable(true)
+        lancier3.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier3, calque_solide);
+
+        lance3 = this.physics.add.sprite(-999, -999, "lance");
+        lance3.body.setAllowGravity(false);
+        lance3.setScale(0.2)
+        lance3.setImmovable(true);
+
+        visionLancier3 = this.add.rectangle(lancier3.x - 300, lancier3.y - 10, 550, 64);
+        this.physics.add.existing(visionLancier3);
+        visionLancier3.body.setAllowGravity(false);
+        visionLancier3.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier3, function() {
+                lancier3.destroy()
+                visionLancier3.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                lance3.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier3, function() {
+                lancier3.destroy()
+                visionLancier3.destroy()
+                lance3.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier3);
+        
+        this.physics.add.overlap(player, visionLancier3, tirerLance3, null, this);
+        
+        this.physics.add.overlap(lance3, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance3, calque_solide, function() {
+            lance3.x = -999
+            lance3.y = -999
+        })
+
+        //ENNEMI 4
+
+        lancier4 = this.physics.add.sprite(2850, 2110, "lancier");
+        lancier4.setBounce(0);
+        lancier4.setScale(0.12)
+        lancier4.setImmovable(true)
+        lancier4.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier4, calque_solide);
+
+        lance4 = this.physics.add.sprite(-999, -999, "lance");
+        lance4.body.setAllowGravity(false);
+        lance4.setScale(0.2)
+        lance4.setImmovable(true);
+        lance4.setScale(-0.2, 0.2)
+
+        visionLancier4 = this.add.rectangle(lancier4.x + 200, lancier4.y - 10, 330, 64);
+        this.physics.add.existing(visionLancier4);
+        visionLancier4.body.setAllowGravity(false);
+        visionLancier4.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier4, function() {
+                lancier4.destroy()
+                visionLancier4.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                lance4.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier4, function() {
+                lancier4.destroy()
+                visionLancier4.destroy()
+                lance4.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier4);
+        
+        this.physics.add.overlap(player, visionLancier4, tirerLance4, null, this);
+        
+        this.physics.add.overlap(lance4, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance4, calque_solide, function() {
+            lance4.x = -999
+            lance4.y = -999
+        })
+
+        //ENNEMI 5
+
+        lancier5 = this.physics.add.sprite(3700, 2270, "lancier");
+        lancier5.setBounce(0);
+        lancier5.setScale(0.12)
+        lancier5.setImmovable(true)
+        lancier5.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier5, calque_solide);
+
+        lance5 = this.physics.add.sprite(-999, -999, "lance");
+        lance5.body.setAllowGravity(false);
+        lance5.setScale(0.2)
+        lance5.setImmovable(true);
+
+        visionLancier5 = this.add.rectangle(lancier5.x - 300, lancier5.y - 10, 550, 64);
+        this.physics.add.existing(visionLancier5);
+        visionLancier5.body.setAllowGravity(false);
+        visionLancier5.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier5, function() {
+                lancier5.destroy()
+                visionLancier5.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                lance5.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier5, function() {
+                lancier5.destroy()
+                visionLancier5.destroy()
+                lance5.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier5);
+        
+        this.physics.add.overlap(player, visionLancier5, tirerLance5, null, this);
+        
+        this.physics.add.overlap(lance5, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance5, calque_solide, function() {
+            lance5.x = -999
+            lance5.y = -999
+        })
+
+        //ENNEMI 6
+
+        lancier6 = this.physics.add.sprite(4112, 2942, "lancier");
+        lancier6.setBounce(0);
+        lancier6.setScale(0.12)
+        lancier6.setImmovable(true)
+        lancier6.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier6, calque_solide);
+
+        lance6 = this.physics.add.sprite(-999, -999, "lance");
+        lance6.body.setAllowGravity(false);
+        lance6.setScale(0.2)
+        lance6.setImmovable(true);
+
+        visionLancier6 = this.add.rectangle(lancier6.x - 300, lancier6.y - 10, 550, 64);
+        this.physics.add.existing(visionLancier6);
+        visionLancier6.body.setAllowGravity(false);
+        visionLancier6.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier6, function() {
+                lancier6.destroy()
+                visionLancier6.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                    lance6.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier6, function() {
+                lancier6.destroy()
+                visionLancier6.destroy()
+                lance6.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier6);
+        
+        this.physics.add.overlap(player, visionLancier6, tirerLance6, null, this);
+        
+        this.physics.add.overlap(lance6, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance6, calque_solide, function() {
+            lance6.x = -999
+            lance6.y = -999
+        })
+
+        //ENNEMI 7
+
+        lancier7 = this.physics.add.sprite(2351, 2654, "lancier");
+        lancier7.setBounce(0);
+        lancier7.setScale(0.12)
+        lancier7.setImmovable(true)
+        lancier7.setCollideWorldBounds(true);
+        this.physics.add.collider(lancier7, calque_solide);
+
+        lance7 = this.physics.add.sprite(-999, -999, "lance");
+        lance7.body.setAllowGravity(false);
+        lance7.setScale(-0.2, 0.2)
+        lance7.setImmovable(true);
+
+        visionLancier7 = this.add.rectangle(lancier7.x + 410, lancier7.y - 10, 700, 64);
+        this.physics.add.existing(visionLancier7);
+        visionLancier7.body.setAllowGravity(false);
+        visionLancier7.body.setImmovable(true)
+
+        this.physics.add.collider(balle, lancier7, function() {
+                lancier7.destroy()
+                visionLancier7.destroy()
+                balle.body.setAllowGravity(true)
+                setTimeout(() => {
+                    lance6.destroy()
+                }, 4600);
+        });
+
+        this.physics.add.collider(javelot, lancier7, function() {
+                lancier7.destroy()
+                visionLancier7.destroy()
+                lance7.destroy()
+        });
+        
+        this.physics.add.collider(javelot, lancier7);
+        
+        this.physics.add.overlap(player, visionLancier7, tirerLance7, null, this);
+        
+        this.physics.add.overlap(lance7, player, playerHitLance, null, this);
+        
+        this.physics.add.collider(lance7, calque_solide, function() {
+            lance7.x = -999
+            lance7.y = -999
+        })
+
+        //AUTRE TRUC
+
+        
+       //Lumières
+    
+        calque_solide.setPipeline("Light2D");
+        background.setPipeline("Light2D");
+        lancier1.setPipeline("Light2D");
+        lance1.setPipeline("Light2D");
+        lancier2.setPipeline("Light2D");
+        lance2.setPipeline("Light2D");
+        lancier3.setPipeline("Light2D");
+        lance3.setPipeline("Light2D");
+        lancier4.setPipeline("Light2D");
+        lance4.setPipeline("Light2D");
+        lancier5.setPipeline("Light2D");
+        lance5.setPipeline("Light2D");
+        lancier6.setPipeline("Light2D");
+        lance6.setPipeline("Light2D");
+        lancier7.setPipeline("Light2D");
+        lance7.setPipeline("Light2D");
+        buisson1.setPipeline("Light2D");
+        buisson2.setPipeline("Light2D");
+        torche1.setPipeline("Light2D");
+        torche2.setPipeline("Light2D");
+        torche3.setPipeline("Light2D");
+        torche4.setPipeline("Light2D");
+        torche5.setPipeline("Light2D");
+        torche6.setPipeline("Light2D");
+        torche7.setPipeline("Light2D");
+        torche8.setPipeline("Light2D");
+        torche9.setPipeline("Light2D");
+        torche10.setPipeline("Light2D");
+        torche11.setPipeline("Light2D");
+        torche12.setPipeline("Light2D");
+        torche13.setPipeline("Light2D");
+        torche14.setPipeline("Light2D");
+        torche15.setPipeline("Light2D");
+        torche16.setPipeline("Light2D");
+        torche17.setPipeline("Light2D");
+        torche18.setPipeline("Light2D");
+        torche19.setPipeline("Light2D");
+        torche20.setPipeline("Light2D");
+        torche21.setPipeline("Light2D");
+        torche22.setPipeline("Light2D");
+        javelot.setPipeline("Light2D");
+        bossHand.setPipeline("Light2D");
+        bossEye1.setPipeline("Light2D");
+        player.setPipeline("Light2D");
+        bras.setPipeline("Light2D");
+
+        this.lights.enable();
+        this.lights.setAmbientColor(0x555555);
+
+        lightPlayer = this.lights.addLight(500, 1100, 600).setColor(0xffffff).setIntensity(1);
+        lightOrb = this.lights.addLight(-999, -999, 200).setColor(0xA7D8DE).setIntensity(3);
+        lightTorche = this.lights.addLight(-999, -999, 350).setColor(0xA7D8DE).setIntensity(4);
+        lightJavelotPlatform = this.lights.addLight(-999, -999, 250).setColor(0xA7D8DE).setIntensity(3);
+        lightVision = this.lights.addLight(-999, -999, 350).setColor(0xff0000).setIntensity(4);
+
+
+
+        this.physics.world.setBounds(0, 0, 6176, 3000);
+        this.cameras.main.setBounds(0, 0, 6176, 3000);
+        this.cameras.main.zoom = 1;
+        this.cameras.main.startFollow(player);
+
+
+        cursors = this.input.keyboard.createCursorKeys();
+
+        //Se TP
+        
+        this.input.keyboard.on('keydown-E', function(cameras)
+                    {
+                        if (canTP === true){
+                            this.cameras.main.flash()
+                            this.cameras.main.shake(100)
+                            canTP = false;
+                            player.x = tpX;
+                            player.y = tpY;
+                            toucheE.x = -100;
+                            toucheE.y = -100;
+                            sauvegarde();
+                            sauvegardeX = tpX;
+                            sauvegardeY = tpY;
+                    }                        
+                }, this);
+
+            //Se cacher dans les buissons
+            this.input.keyboard.on('keydown-E', function(cameras)
+            {
+                if (canHide === true && playerIsDetected === false){
+                    hidden = true;
+                    player.setVisible(false);
+                    player.setActive(false);
+                    bras.setVisible(false);
+                    player.setVelocityX(0);
+                    this.cameras.main.setZoom(2);
+                    lightPlayer.setIntensity(0);
+            }   
+                else if (hidden === true){
+                    hidden = false;
+                    player.setVisible(true);
+                    bras.setVisible(true);
+                    player.setActive(true);
+                    this.cameras.main.setZoom(1);
+                    lightPlayer.setIntensity(6);
+                }                     
+        }, this);
+
+        //Tirer
+        this.input.keyboard.on('keydown-R', function()
+        {
+            if (canShoot === true && hidden === false && orbSelected === true){
+                balle.setVisible(true);
+                balle.setAngle(bras.body.rotation);
+                balle.setPosition(bras.x, bras.y);
+                balle.body.setAllowGravity(true);
+
+                const angle = Phaser.Math.DegToRad(bras.body.rotation);
+
+                this.physics.velocityFromRotation(angle, 225, balle.body.velocity);
+
+                balle.body.velocity.x *= 2;
+                balle.body.velocity.y *= 2; 
+
+                canShoot = false
+
+                setTimeout(() => {
+                    canShoot = true
+                }, 1000);
+            }   
+
+        }, this);
+
+        //Tirer un autre truc
+        
+        this.input.keyboard.on('keydown-R', function()
+        {
+            if (canShoot === true && hidden === false && orbSelected === false){
+                javelot.setVisible(true);
+                javelot.setAngle(bras.body.rotation);
+                javelot.setPosition(bras.x, bras.y);
+                javelot.body.setAllowGravity(true);
+
+                const angle = Phaser.Math.DegToRad(bras.body.rotation);
+
+                this.physics.velocityFromRotation(angle, 225, javelot.body.velocity);
+
+                javelot.body.velocity.x *= 2;
+                javelot.body.velocity.y *= 2; 
+
+                canShoot = false
+
+                setTimeout(() => {
+                    canShoot = true
+                }, 1000);
+            }   
+
+        }, this);
+
+       //Changer projectiles a droite
+       
+        this.input.keyboard.on('keydown-G', function()
+        {
+                setTimeout(() => {
+                    uiFlecheDroite.setScale(0.3);
+                    uiFlecheDroite.clearTint();
+                    if (orbSelected === true){
+                        orbSelected = false;
+                    }
+                    else {
+                        orbSelected = true
+                    }
+                }, 100);
+                uiFlecheDroite.setScale(0.35);
+                uiFlecheDroite.setTint(0xA7D8DE);
+            }   
+    )
+
+    //Changer projectiles a gauche
+    
+    this.input.keyboard.on('keydown-F', function()
+        {
+                setTimeout(() => {
+                    uiFlecheGauche.setScale(0.3);
+                    uiFlecheGauche.clearTint();
+                    if (orbSelected === true){
+                        orbSelected = false;
+                    }
+                    else {
+                        orbSelected = true
+                    }
+                }, 100);
+                uiFlecheGauche.setScale(0.35);
+                uiFlecheGauche.setTint(0xA7D8DE);
+    }); 
+    
+   // this.input.keyboard.on('keydown-J', function()
+   // {
+        //console.log("Orbe selectionnée : " + orbSelected);
+   // });
+
+   // this.input.keyboard.on('keydown-K', function()
+   // {
+      //  if (HP >= 0){
+       //     HP -= 1;
+       // }
+//});
+}
+
+        
+    
+    function update(){
+
+        console.log("x : " + player.x + " y : " + player.y)
+
+        lightPlayer.x = player.x
+        lightPlayer.y = player.y
+
+        lightOrb.x = balle.x
+        lightOrb.y = balle.y
+
+        lightJavelotPlatform.x = javelotPlatform.x
+        lightJavelotPlatform.y = javelotPlatform.y
+
+        if (menuOpen === true){
+            menu.setVisible(true)
+        }
+        else {
+            menu.setVisible(false);
+        }
+
+        //Update Joueur
+        if (hidden === false && playerIsDetected === false && menuOpen === false){
+            if (cursors.shift.isDown){
+                sprint = true;
+            }
+            else {
+                sprint = false;
+            }
+
+            if (cursors.left.isDown){ //si la touche gauche est appuyée
+            player.setVelocityX(-160); //alors vitesse négative en X
+            faceL = true;
+            faceR = false;
+            bras.setAngle(-180);
+            if (sprint === true){
+                player.setVelocityX(-280);
+            }
+            }
+            else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
+            player.setVelocityX(160); //alors vitesse positive en X
+            faceL = false;
+            faceR = true;
+            bras.setAngle(0);
+            if (sprint === true){
+                player.setVelocityX(280);
+            }
+            }
+            else{ // sinon
+            player.setVelocityX(0); //vitesse nulle
+            }
+            
+            if (cursors.space.isDown){
+            player.setVelocityY(-300); //alors vitesse verticale négative
+            }
+
+            
+            if (cursors.up.isDown && (bras.angle > -68) && faceR === true){
+                bras.angle -=4;
+                //console.log(bras.angle);
+            }
+            else if (cursors.down.isDown && (bras.angle < 68)  && faceR === true){
+                bras.angle +=4;
+                //console.log(bras.angle);
+            }
+
+            if (cursors.up.isDown && (bras.angle < -112) && faceL === true){
+                bras.angle +=4;
+                //console.log(bras.angle);
+            }
+            else if (cursors.up.isDown && (bras.angle > 111)  && faceL === true){
+                bras.angle +=4;
+                //console.log(bras.angle);
+            }
+            else if (cursors.down.isDown && (bras.angle < 112)  && faceL === true){
+                bras.angle -=4;
+                //console.log(bras.angle);
+            }
+            else if (cursors.down.isDown && (bras.angle > 112)  && faceL === true){
+                bras.angle -=4;
+                //console.log(bras.angle);
+            }
+        }
+
+        if(playerIsDetected === true){
+            player.setVelocityX(0);
+            player.setVelocityY(0);
+        }
+
+        uiBarreHPValeur.scaleX = (HP/100)/2;
+
+        if(HP == 0){
+            uiBarreHPValeur.setVisible(false);
+        }
+
+        bras.y = player.y;
+        bras.x = player.x;
+
+        if(orbSelected === true){
+            uiBalle.setVisible(true);
+            uiJavelot.setVisible(false);
+        }
+        else{
+            uiBalle.setVisible(false);
+            uiJavelot.setVisible(true);
+        }
+        
+        if (eye1Active === true){
+            bossEye1.setVisible(true);
+            bossEye1Vision.setVisible(true);
+            lightVision.x = bossEye1Vision.x
+            lightVision.y = bossEye1Vision.y
+            
+        }
+        else {
+            bossEye1.setVisible(false);
+            bossEye1Vision.setVisible(false);
+            lightVision.y = -999
+            lightVision.x = -999
+        }
+
+        bossEye1Vision.x = bossEye1.x
+        bossEye1Vision.y = bossEye1.y + 80
+        
+        if(handAttack === true){
+            bossHand.setVelocityX(-650)
+        }
+
+        if(playerInvincible === true){
+            player.setAlpha(0.5);
+        }
+        else{
+            player.setAlpha(1);
+        }
+
+       if (hidden === false){
+        lightPlayer.setIntensity(HP *5 /100)
+       }
+
+        if (HP == 0){
+            gameOver = true;
+        }
+
+        if (gameOver === true){
+            uiGameOver.setVisible(true);
+        }
+
+    }
+
+    function sauvegarde(){
+        setTimeout(() => {
+                    save.setVisible(false);
+                }, 1500);
+                save.setVisible(true);
+    }
+
+    function hitWall(balle){
+        balle.setVelocityX(0)
+        balle.setVelocityY(0)
+        balle.setBounce(0);
+        balle.body.setAllowGravity(false);
+    }
+
+    function hitWallJavelot(javelot){
+        javelot.setVelocityX(0)
+        javelot.setVelocityY(0)
+        javelot.setBounce(0);
+        javelot.body.setAllowGravity(false);
+        setTimeout(() => {
+            javelotPlatform.x = javelot.x
+            javelotPlatform.y = javelot.y
+            javelotPlatform.setImmovable(true);
+            detruireJavelot();
+        },200);
+        setTimeout(() => {
+            detruireJavelotPlatform();
+        },8000);
+    }
+
+    function allumeTorche(balle, torche){
+        balle.setVelocityX(0);
+        balle.setVelocityY(0);
+        detruireBalle();
+        torche.setTint(0xA7D8DE);
+        canTP = true
+        tpX = torche.x
+        tpY = torche.y
+        toucheE.x = tpX
+        toucheE.y = tpY - 50
+        lightTorche.y = tpY - 35;
+        lightTorche.x = tpX
+        setTimeout(() => {
+            canTP = false;
+            torche.clearTint();
+            toucheE.x = -100
+            toucheE.y = -100
+            lightTorche.x = -999
+            lightTorche.y = -999
+        }, 5000);
+    }
+
+    function detruireBalle(){
+        balle.x = -999;
+        balle.y = -999;
+    }
+
+    function detruireJavelot(){
+        javelot.x = -999;
+        javelot.y = -999;
+    }
+
+    function detruireJavelotPlatform(){
+        javelotPlatform.x = -999;
+        javelotPlatform.y = -999;
+    }
+
+    function collectKey1(){
+        keys += 1
+        key1.setVisible(false);
+    }
+
+    function collectKey2(){
+        keys += 1
+        key2.setVisible(false);
+    }
+
+    function collectKey3(){
+        keys += 1
+        key3.setVisible(false);
+    }
+
+    function passeBuisson(player, buisson){
+        if(hidden === false){
+            canHide = true;
+            xE = buisson.x;
+            yE = buisson.y;
+            toucheE.x = xE;
+            toucheE.y = yE - 40;
+            buisson.setTint(0xA7D8DE);
+            setTimeout(() => {
+                canHide = false;
+                buisson.clearTint();
+                toucheE.x = -100;
+                toucheE.y = -100;
+            }, 10);
+        }
+    }
+
+    function spawnEye1(bossEye1){
+        eye1Active = true;
+    }
+
+    function playerDetected(player){
+        if (eye1Active === true && hidden === false){
+            player.setTint(0xff0000); 
+            bras.setTint(0xff0000);
+            playerIsDetected = true;
+            bossEye1.setVelocityX(0)
+            setTimeout(() => {
+                bossEye1.setSize(10, 10)
+                bossHand.x = player.x + 400
+                bossHand.y = player.y
+                playerIsDetected = false;
+                setTimeout(() => {
+                bossHand.setTexture("hand2")
+                handAttack = true
+            }, 2000);
+        }, 2000);
+        }
+    }
+
+    function tirerLance1(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance1.x = lancier1.x - 50
+            lance1.y = lancier1.y
+            lance1.setVelocityX(-500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance2(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance2.x = lancier2.x - 50
+            lance2.y = lancier2.y
+            lance2.setVelocityX(-500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance3(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance3.x = lancier3.x - 50
+            lance3.y = lancier3.y
+            lance3.setVelocityX(-500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance4(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance4.x = lancier4.x + 50
+            lance4.y = lancier4.y
+            lance4.setVelocityX(500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance5(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance5.x = lancier5.x - 50
+            lance5.y = lancier5.y
+            lance5.setVelocityX(-500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance6(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance6.x = lancier6.x - 50
+            lance6.y = lancier6.y
+            lance6.setVelocityX(-500)
+            enemyCanShoot = false
+        }
+    }
+
+    function tirerLance7(){
+        if(enemyCanShoot === true){
+            setTimeout(() => {
+            enemyCanShoot = true
+        }, 4500);
+        lance7.x = lancier7.x + 50
+            lance7.y = lancier7.y
+            lance7.setVelocityX(500)
+            enemyCanShoot = false
+        }
+    }
+
+    function fini(){
+        if(keys == 3){
+            this.scene.stop();
+        }
+    }
+
+    function playerHitLance(player){
+        if(playerInvincible === false){
+        HP -= 20
+        setTimeout(() => {
+            playerInvincible = false
+        }, 1500);
+        playerInvincible = true
+    }
+    }
+
+</script>
+</body>
+</html>
